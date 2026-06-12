@@ -1,5 +1,9 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-thumb { background: #c9c6bd; border-radius: 8px; }
-@media print { .no-print { display: none !important; } }
+body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; letter-spacing: -0.011em; font-size: 14px; }
+h1,h2,h3 { letter-spacing: -0.02em; }
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-thumb { background: #d9d6cd; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #c7c3b8; }
+input,select,button,textarea { font-family: inherit; }
+@media print { .no-print { display: none !important; } body { background:#fff; } }
