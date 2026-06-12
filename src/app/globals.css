@@ -2,3 +2,4 @@
 html, body { margin: 0; padding: 0; }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-thumb { background: #c9c6bd; border-radius: 8px; }
+@media print { .no-print { display: none !important; } }
