@@ -3,17 +3,28 @@ import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
 import { supabase } from '@/lib/supabase';
 type U = { id: string; email: string; created_at: string };
+const LANGS = [{ c: 'pt', l: 'Português' }, { c: 'en', l: 'English' }, { c: 'es', l: 'Español' }];
 export default function Usuarios() {
-  const [list, setList] = useState<U[]>([]); const [email, setEmail] = useState(''); const [pw, setPw] = useState(''); const [msg, setMsg] = useState(''); const [loading, setLoading] = useState(true);
+  const [list, setList] = useState<U[]>([]);
+  const [email, setEmail] = useState(''); const [pw, setPw] = useState(''); const [locale, setLocale] = useState('pt');
+  const [msg, setMsg] = useState(''); const [loading, setLoading] = useState(true);
   const carregar = async () => { setList(await (await fetch('/api/users')).json()); setLoading(false); };
   useEffect(() => { supabase.auth.getUser().then(({ data }) => { if (!data.user) window.location.href='/login'; else carregar(); }); }, []);
-  const criar = async () => { setMsg(''); const d = await (await fetch('/api/users', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password: pw }) })).json(); if (d.error) setMsg(d.error); else { setEmail(''); setPw(''); carregar(); } };
+  const criar = async () => {
+    setMsg('');
+    const d = await (await fetch('/api/users', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password: pw, locale }) })).json();
+    if (d.error) setMsg(d.error); else { setEmail(''); setPw(''); carregar(); }
+  };
   return (<Shell title="Usuários">
     <div className="grid lg:grid-cols-3 gap-6">
       <div className="bg-white rounded-2xl border border-preto/10 p-5 h-fit">
         <h3 className="font-bold mb-4">Cadastrar usuário</h3>
         <input className="w-full border border-preto/15 rounded-xl px-3 py-2 mb-3" placeholder="email" value={email} onChange={(e)=>setEmail(e.target.value)} />
-        <input className="w-full border border-preto/15 rounded-xl px-3 py-2 mb-4" placeholder="senha" type="password" value={pw} onChange={(e)=>setPw(e.target.value)} />
+        <input className="w-full border border-preto/15 rounded-xl px-3 py-2 mb-3" placeholder="senha" type="password" value={pw} onChange={(e)=>setPw(e.target.value)} />
+        <label className="block text-sm font-medium mb-1">Idioma padrão</label>
+        <select className="w-full border border-preto/15 rounded-xl px-3 py-2 mb-4 bg-white" value={locale} onChange={(e)=>setLocale(e.target.value)}>
+          {LANGS.map((l)=> <option key={l.c} value={l.c}>{l.l}</option>)}
+        </select>
         <button onClick={criar} className="w-full bg-preto text-white rounded-xl py-2 font-semibold">Criar</button>
         {msg && <p className="text-rose text-sm mt-3">{msg}</p>}
       </div>

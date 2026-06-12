@@ -15,17 +15,28 @@ export default function Chat() {
   const endRef = useRef<HTMLDivElement>(null);
   const loadChannels = async () => { const d = await (await fetch('/api/chat?type=channels')).json(); setChannels(d); if (!active && d[0]) setActive(d[0].id); };
   const loadMsgs = async (ch: string) => setMsgs(await (await fetch('/api/chat?type=messages&channel=' + ch)).json());
-  useEffect(() => { supabase.auth.getUser().then(({ data }) => setUid(data.user?.id ?? '')); loadChannels(); }, []);
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data }) => {
+      const id = data.user?.id ?? ''; setUid(id);
+      if (id) { const me = await (await fetch('/api/me?uid=' + id)).json(); if (me?.default_locale) setView(me.default_locale); }
+    });
+    loadChannels();
+  }, []);
   useEffect(() => { if (!active) return; loadMsgs(active); const t = setInterval(() => loadMsgs(active), 3000); return () => clearInterval(t); }, [active]);
   useEffect(() => { endRef.current?.scrollIntoView(); }, [msgs]);
+  const changeView = async (v: string) => {
+    setView(v);
+    if (uid) fetch('/api/me', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uid, locale: v }) });
+  };
   const novoCanal = async () => { const name = prompt('Nome do canal:'); if (!name) return; await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'channel', name }) }); loadChannels(); };
   const enviar = async () => { if (!text.trim() || !active) return; const body = { type: 'message', channel_id: active, sender_id: uid, content: text, locale: view }; setText(''); await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); loadMsgs(active); };
   const render = (m: Msg) => { if (showOrig[m.id]) return m.content_original; if (m.locale_original === view) return m.content_original; return m.message_translations?.find((t) => t.locale === view)?.content ?? m.content_original; };
   return (
     <Shell title="Chat">
-      <div className="flex justify-end mb-3">
-        <select value={view} onChange={(e) => setView(e.target.value)} className="border border-preto/15 rounded-lg px-3 py-1.5 bg-white text-sm">
-          {LANGS.map((l) => <option key={l.c} value={l.c}>Ver em: {l.l}</option>)}
+      <div className="flex justify-end mb-3 items-center gap-2">
+        <span className="text-xs text-preto/40">Seu idioma:</span>
+        <select value={view} onChange={(e) => changeView(e.target.value)} className="border border-preto/15 rounded-lg px-3 py-1.5 bg-white text-sm">
+          {LANGS.map((l) => <option key={l.c} value={l.c}>{l.l}</option>)}
         </select>
       </div>
       <div className="flex gap-4 h-[calc(100vh-11rem)]">
